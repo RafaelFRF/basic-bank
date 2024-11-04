@@ -11,15 +11,19 @@ func main() {
 
 		var choice int = getUsersChoice()
 
-		if choice == 1 {
+		switch choice {
+		case 1:
 			fmt.Println("Your balance is: ", accountBalance)
-		} else if choice == 2 {
+		case 2:
 			depositAmount()
-		} else if choice == 3 {
+		case 3:
 			withdrawAmount()
-		} else {
+		case 4:
 			fmt.Println("Goodbye!")
-			break
+			fmt.Println("Thanks for choosing our bank.")
+			return
+		default:
+			fmt.Println("Invalid choice.")
 		}
 		continue
 	}
