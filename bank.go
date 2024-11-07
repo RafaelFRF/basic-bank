@@ -1,10 +1,25 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"os"
+	"strconv"
+)
 
-var accountBalance float64 = 1000.0
+const accountBalanceFile = "balance.txt"
 
 func main() {
+	var accountBalance, err = getBalanceToFile()
+
+	if err != nil {
+		fmt.Println("-------")
+		fmt.Println("ERROR")
+		fmt.Println(err)
+		// Function for tracking the error infos
+		// panic("Can't continue, sorry.")
+		fmt.Println("-------")
+	}
 
 	for {
 		initialQuestions()
@@ -15,9 +30,9 @@ func main() {
 		case 1:
 			fmt.Println("Your balance is: ", accountBalance)
 		case 2:
-			depositAmount()
+			accountBalance = depositAmount(accountBalance)
 		case 3:
-			withdrawAmount()
+			accountBalance = withdrawAmount(accountBalance)
 		case 4:
 			fmt.Println("Goodbye!")
 			fmt.Println("Thanks for choosing our bank.")
@@ -45,34 +60,55 @@ func getUsersChoice() int {
 	return choice
 }
 
-func withdrawAmount() {
+func withdrawAmount(accountBalance float64) float64 {
 	fmt.Print("Withdraw amount: ")
 	var withdrawAmount float64
 	fmt.Scan(&withdrawAmount)
 
 	if withdrawAmount <= 0 {
 		fmt.Println("Invalid amount. Must be greater than 0.")
-		return
-	}
-	if withdrawAmount > accountBalance {
+	} else if withdrawAmount > accountBalance {
 		fmt.Println("Invalid amount. You can't withdraw more than you have.")
-		return
+	} else {
+		accountBalance -= withdrawAmount
+		fmt.Println("Balance updated! New amount:", accountBalance)
+		writeBalanceToFile(accountBalance)
 	}
-
-	accountBalance -= withdrawAmount
-	fmt.Println("Balance updated! New amount:", accountBalance)
+	return accountBalance
 }
 
-func depositAmount() {
+func depositAmount(accountBalance float64) float64 {
 	fmt.Print("Your deposit: ")
 	var depositAmount float64
 	fmt.Scan(&depositAmount)
 
 	if depositAmount <= 0 {
 		fmt.Println("Invalid amount. Must be greater than 0.")
-		return
+	} else {
+		accountBalance += depositAmount
+		fmt.Println("Balance updated! New amount:", accountBalance)
+		writeBalanceToFile(accountBalance)
+	}
+	return accountBalance
+}
+
+func writeBalanceToFile(balance float64) {
+	balanceText := fmt.Sprint(balance)
+	os.WriteFile(accountBalanceFile, []byte(balanceText), 0644)
+}
+
+func getBalanceToFile() (float64, error) {
+	// _ represents a value that I know I could receive but I don't want to work with it
+	data, err := os.ReadFile(accountBalanceFile)
+	if err != nil {
+		return 0, errors.New("Failed to read the file.")
 	}
 
-	accountBalance += depositAmount
-	fmt.Println("Balance updated! New amount:", accountBalance)
+	balanceText := string(data)
+	balance, err := strconv.ParseFloat(balanceText, 64)
+	if err != nil {
+		return 0, errors.New("Failed to parse stored balance value.")
+	}
+
+	return balance, nil
 }
